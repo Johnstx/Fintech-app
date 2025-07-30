@@ -34,3 +34,11 @@ jobs:
           file:  ./App/cicd/finmoney-app/backend/Dockerfile
           push: true
           tags: johnstx/backend-fw:1.0.0
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v6.13.0
+        with:
+          context: ./database
+          file:  ./App/cicd/finmoney-app/database/Dockerfile
+          push: true
+          tags: johnstx/db-fw:1.0.0
