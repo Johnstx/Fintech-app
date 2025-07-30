@@ -240,6 +240,6 @@ Extra Notes
 -- aws eks update-kubeconfig --name liveclasses --region eu-west-2 --kubeconfig ~/.kube/config
 
 # Example accessing an application from the internet
-![](../week8/images/service-LB-to-Pod.png)
+![](../week8/images/service-LB-to-Pod.png
 
-
+<!-- end of note -->
