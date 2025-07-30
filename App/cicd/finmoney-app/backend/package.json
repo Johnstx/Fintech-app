@@ -1,7 +1,7 @@
 {
-  "name": "finmoney-app",
+  "name": "fundwave-app",
   "version": "1.0.0",
-  "description": "A fintech application to learn DevOps from DAREY.IO",
+  "description": "A fintech application for an mvp",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,17 +9,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/darey-devops/masterclass-advanced.git"
+    "url": "git+ssh://git@github.com:Johnstx/Fintech-app.git"
   },
   "keywords": [
-    "finmoney"
+    "fundwave"
   ],
-  "author": "Dare Olufunmilayo",
+  "author": "John Inyiri",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/darey-devops/masterclass-advanced/issues"
+    "url": "https://github.com/Johnstx/Fintech-app/issues"
   },
-  "homepage": "https://github.com/darey-devops/masterclass-advanced#readme",
+  "homepage": "https://github.com/Johnstx/Fintech-app#readme",
   "dependencies": {
     "express": "^4.17.1",
     "body-parser": "^1.19.0",

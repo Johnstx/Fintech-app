@@ -18,7 +18,7 @@ services:
     ports:
       - 3000:3000
     environment:
-      - MONGO_URI=mongodb://mongo:27017/finmoneydb
+      - MONGO_URI=mongodb://mongo:27017/fundwavedb
 
   frontend:
     build:
