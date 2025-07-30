@@ -19,7 +19,7 @@ jobs:
           username: johnstx
           password: ${{ secrets.DOCKER_PASSWORD }}
           
-      - name: Build and push Docker images
+      - name: Build and push Docker frontend image
         uses: docker/build-push-action@v6.13.0
         with:
           context: ./frontend
@@ -27,7 +27,7 @@ jobs:
           push: true
           tags: johnstx/frontend-fw:1.0.0
 
-      - name: Build and push Docker images
+      - name: Build and push Docker backend image
         uses: docker/build-push-action@v6.13.0
         with:
           context: ./backend
@@ -35,7 +35,7 @@ jobs:
           push: true
           tags: johnstx/backend-fw:1.0.0
 
-      - name: Build and push Docker images
+      - name: Build and push Docker db image
         uses: docker/build-push-action@v6.13.0
         with:
           context: ./database
