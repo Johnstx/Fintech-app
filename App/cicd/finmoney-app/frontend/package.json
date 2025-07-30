@@ -4,8 +4,8 @@
   "description": "The frontend fintech application for an mvp",
   "main": "index.js",
   "scripts": {
-    "start": "react-scripts start",   
-    "build": "react-scripts build"    
+    "start": "react-scripts start",
+    "build": "react-scripts build"
   },
   "repository": {
     "type": "git",
@@ -21,9 +21,10 @@
   },
   "homepage": "https://github.com/Johnstx/Fintech-app",
   "dependencies": {
+    "@babel/core": "^7.28.0",
+    "axios": "^0.24.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "^4.0.3",
-    "axios": "^0.24.0"
+    "react-scripts": "^4.0.3"
   }
 }
