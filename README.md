@@ -31,3 +31,4 @@ npm install @babel/core@^7.16.0
 ### Result: 
 workflow successful
 
+2. A node downgrade to v16 was done for compatibility with some hash encryptions.
