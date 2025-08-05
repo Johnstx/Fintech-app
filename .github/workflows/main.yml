@@ -4,7 +4,7 @@ on:
   push:
     branches:
         - main
-        - dev/*
+        - workflow/*
 
 jobs:
   Docker:
@@ -25,7 +25,7 @@ jobs:
                 context: ./App/cicd/finmoney-app/frontend
                 file:  ./App/cicd/finmoney-app/frontend/Dockerfile
                 push: true
-                tags: johnstx/frontend-fw:1.0.0
+                tags: johnstx/frontend-fw:1.1.0
 
           - name: Build and push Docker backend image
             uses: docker/build-push-action@v6.13.0
@@ -33,7 +33,7 @@ jobs:
                 context: ./App/cicd/finmoney-app/backend
                 file:  ./App/cicd/finmoney-app/backend/Dockerfile
                 push: true
-                tags: johnstx/backend-fw:1.0.0
+                tags: johnstx/backend-fw:1.1.0
 
           - name: Build and push Docker db image
             uses: docker/build-push-action@v6.13.0
@@ -41,4 +41,4 @@ jobs:
                 context: ./App/cicd/finmoney-app/database
                 file:  ./App/cicd/finmoney-app/database/Dockerfile
                 push: true
-                tags: johnstx/db-fw:1.0.0
+                tags: johnstx/db-fw:1.1.0
