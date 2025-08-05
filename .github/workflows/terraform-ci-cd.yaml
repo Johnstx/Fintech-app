@@ -38,6 +38,7 @@ jobs:
  
       - name: Terraform Plan
         run: terraform plan -var-file=environments/${{ github.event.inputs.environment }}/values.tfvars -out=tfplan
+        working-directory: ./App/fundwave-eks-terraform
 
       - name: Manual Approval
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
@@ -47,6 +48,8 @@ jobs:
           issue-title: "Provisioning eks Infrastructure for ${{ github.event.inputs.environment }}"
           issue-body: "Kindly find details of infra & approve the provisioning of the EKS infrastructure for the ${{ github.event.inputs.environment }} environment."
           approvers: 'Johnstx'
+          minimum-approvals: 1
+          
       - name: Terraform Apply
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
         run: terraform apply tfplan
