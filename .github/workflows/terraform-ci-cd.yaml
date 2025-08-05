@@ -37,7 +37,8 @@ jobs:
         working-directory: ./App/fundwave-eks-terraform
  
       - name: Terraform Plan
-        run: terraform plan -var-file=environments/${{ github.event.inputs.environment }}/values.tfvars -out=tfplan
+        run: terraform plan 
+        # -var-file=environments/${{ github.event.inputs.environment }}/values.tfvars -out=tfplan
         working-directory: ./App/fundwave-eks-terraform
 
       - name: Manual Approval
