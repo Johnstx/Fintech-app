@@ -94,7 +94,7 @@ locals {
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
 
-  name                   = local.name
+  cluster_name           = local.name
   kubernetes_version     = local.kubernetes_version
   endpoint_public_access = true
 
@@ -490,7 +490,7 @@ module "eks" {
 ################################################################################
 
 module "eks_managed_node_group" {
-  source = "terraform-aws-modules/eks/aws"
+  source = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
 
   name                 = "separate-eks-mng"
   cluster_name         = module.eks.cluster_name
