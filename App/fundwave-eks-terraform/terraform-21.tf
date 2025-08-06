@@ -466,10 +466,10 @@ module "eks" {
   #     principal_arn     = data.aws_caller_identity.current.arn
   #     user_name         = "someone"
   #   }
-  # }
+  }
 
   # tags = local.tags
-# }
+}
 
 # module "disabled_eks" {
 #   source = "../.."
