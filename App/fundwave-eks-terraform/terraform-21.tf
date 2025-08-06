@@ -479,18 +479,18 @@ module "eks" {
   tags = local.tags
 }
 
-module "disabled_eks" {
-  source = "../.."
+# module "disabled_eks" {
+#   source = "../.."
 
-  create = false
-}
+#   create = false
+# }
 
 ################################################################################
 # Sub-Module Usage on Existing/Separate Cluster
 ################################################################################
 
 module "eks_managed_node_group" {
-  source = "../../modules/eks-managed-node-group"
+  source = "terraform-aws-modules/eks/aws"
 
   name                 = "separate-eks-mng"
   cluster_name         = module.eks.cluster_name
@@ -517,11 +517,7 @@ module "eks_managed_node_group" {
   tags = merge(local.tags, { Separate = "eks-managed-node-group" })
 }
 
-module "disabled_eks_managed_node_group" {
-  source = "../../modules/eks-managed-node-group"
 
-  create = false
-}
 
 ################################################################################
 # Supporting Resources
