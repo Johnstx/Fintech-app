@@ -32,10 +32,10 @@ output "cluster_oidc_issuer_url" {
   value       = module.eks.cluster_oidc_issuer_url
 }
 
-output "cluster_dualstack_oidc_issuer_url" {
-  description = "Dual-stack compatible URL on the EKS cluster for the OpenID Connect identity provider"
-  value       = module.eks.cluster_dualstack_oidc_issuer_url
-}
+# output "cluster_dualstack_oidc_issuer_url" {
+#   description = "Dual-stack compatible URL on the EKS cluster for the OpenID Connect identity provider"
+#   value       = module.eks.cluster_dualstack_oidc_issuer_url
+# }
 
 output "cluster_platform_version" {
   description = "Platform version for the cluster"
@@ -52,24 +52,24 @@ output "cluster_primary_security_group_id" {
   value       = module.eks.cluster_primary_security_group_id
 }
 
-output "cluster_service_cidr" {
-  description = "The CIDR block where Kubernetes pod and service IP addresses are assigned from"
-  value       = module.eks.cluster_service_cidr
-}
+# output "cluster_service_cidr" {
+#   description = "The CIDR block where Kubernetes pod and service IP addresses are assigned from"
+#   value       = module.eks.cluster_service_cidr
+# }
 
-output "cluster_ip_family" {
-  description = "The IP family used by the cluster (e.g. `ipv4` or `ipv6`)"
-  value       = module.eks.cluster_ip_family
-}
+# output "cluster_ip_family" {
+#   description = "The IP family used by the cluster (e.g. `ipv4` or `ipv6`)"
+#   value       = module.eks.cluster_ip_family
+# }
 
 ################################################################################
 # Access Entry
 ################################################################################
 
-output "access_entries" {
-  description = "Map of access entries created and their attributes"
-  value       = module.eks.access_entries
-}
+# output "access_entries" {
+#   description = "Map of access entries created and their attributes"
+#   value       = module.eks.access_entries
+# }
 
 ################################################################################
 # KMS Key
@@ -160,20 +160,20 @@ output "cluster_iam_role_unique_id" {
 # EKS Auto Node IAM Role
 ################################################################################
 
-output "node_iam_role_name" {
-  description = "EKS Auto node IAM role name"
-  value       = module.eks.node_iam_role_name
-}
+# output "node_iam_role_name" {
+#   description = "EKS Auto node IAM role name"
+#   value       = module.eks.node_iam_role_name
+# }
 
-output "node_iam_role_arn" {
-  description = "EKS Auto node IAM role ARN"
-  value       = module.eks.node_iam_role_arn
-}
+# output "node_iam_role_arn" {
+#   description = "EKS Auto node IAM role ARN"
+#   value       = module.eks.node_iam_role_arn
+# }
 
-output "node_iam_role_unique_id" {
-  description = "Stable and unique string identifying the IAM role"
-  value       = module.eks.node_iam_role_unique_id
-}
+# output "node_iam_role_unique_id" {
+#   description = "Stable and unique string identifying the IAM role"
+#   value       = module.eks.node_iam_role_unique_id
+# }
 
 ################################################################################
 # EKS Addons

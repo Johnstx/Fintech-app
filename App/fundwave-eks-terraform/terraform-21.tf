@@ -144,21 +144,7 @@ module "eks" {
     default_node_group = {
       # By default, the module creates a launch template to ensure tags are propagated to instances, etc.,
       # so we need to disable it to use the default template provided by the AWS EKS managed node group service
-      use_custom_launch_template = false
-
-      disk_size = 50
-
-      # Remote access cannot be specified with a launch template
-      remote_access = {
-        ec2_ssh_key               = module.key_pair.key_pair_name
-        source_security_group_ids = [aws_security_group.remote_access.id]
-      }
-    }
-
-    placement_group = {
-      create_placement_group = true
-      subnet_ids             = slice(module.vpc.private_subnets, 0, 1)
-      instance_types         = ["m5.large", "m5n.large", "m5zn.large"]
+   
     }
 
     # AL2023 node group utilizing new user data format which utilizes nodeadm
