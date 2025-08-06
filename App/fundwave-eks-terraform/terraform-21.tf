@@ -93,18 +93,18 @@ locals {
 
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
+  version = "~> 19.0"
 
   cluster_name           = local.name
-  kubernetes_version     = local.kubernetes_version
-  endpoint_public_access = true
+  cluster_version        = local.kubernetes_version
+  cluster_endpoint_public_access = true
 
   # IPV6
-  ip_family                  = "ipv6"
+  cluster_ip_family                  = "ipv6"
   create_cni_ipv6_iam_policy = true
 
-  enable_cluster_creator_admin_permissions = true
 
-  addons = {
+  cluster_addons = {
     coredns = {
       most_recent = true
     }
@@ -133,14 +133,6 @@ module "eks" {
         service_account = "aws-node"
       }]
     }
-  }
-
-  upgrade_policy = {
-    support_type = "STANDARD"
-  }
-
-  zonal_shift_config = {
-    enabled = true
   }
 
   vpc_id                   = module.vpc.vpc_id
@@ -376,146 +368,114 @@ module "eks" {
         ExtraTag = "EKS managed node group complete example"
       }
     }
+    tags = local.tags
+  #   efa = {
+  #     # Disabling automatic creation due to instance type/quota availability
+  #     # Can be enabled when appropriate for testing/validation
+  #     create = false
 
-    efa = {
-      # Disabling automatic creation due to instance type/quota availability
-      # Can be enabled when appropriate for testing/validation
-      create = false
+  #     # The EKS AL2023 NVIDIA AMI provides all of the necessary components
+  #     # for accelerated workloads w/ EFA
+  #     ami_type       = "AL2023_x86_64_NVIDIA"
+  #     instance_types = ["p5e.48xlarge"]
 
-      # The EKS AL2023 NVIDIA AMI provides all of the necessary components
-      # for accelerated workloads w/ EFA
-      ami_type       = "AL2023_x86_64_NVIDIA"
-      instance_types = ["p5e.48xlarge"]
+  #     # Mount instance store volumes in RAID-0 for kubelet and containerd
+  #     # https://github.com/awslabs/amazon-eks-ami/blob/master/doc/USER_GUIDE.md#raid-0-for-kubelet-and-containerd-raid0
+  #     cloudinit_pre_nodeadm = [
+  #       {
+  #         content_type = "application/node.eks.aws"
+  #         content      = <<-EOT
+  #           ---
+  #           apiVersion: node.eks.aws/v1alpha1
+  #           kind: NodeConfig
+  #           spec:
+  #             instance:
+  #               localStorage:
+  #                 strategy: RAID0
+  #         EOT
+  #       }
+  #     ]
 
-      # Mount instance store volumes in RAID-0 for kubelet and containerd
-      # https://github.com/awslabs/amazon-eks-ami/blob/master/doc/USER_GUIDE.md#raid-0-for-kubelet-and-containerd-raid0
-      cloudinit_pre_nodeadm = [
-        {
-          content_type = "application/node.eks.aws"
-          content      = <<-EOT
-            ---
-            apiVersion: node.eks.aws/v1alpha1
-            kind: NodeConfig
-            spec:
-              instance:
-                localStorage:
-                  strategy: RAID0
-          EOT
-        }
-      ]
+  #     # This will:
+  #     # 1. Create a placement group to place the instances close to one another
+  #     # 2. Create and attach the necessary security group rules (and security group)
+  #     # 3. Expose all of the available EFA interfaces on the launch template
+  #     enable_efa_support = true
+  #     enable_efa_only    = true
+  #     efa_indices        = [0, 4, 8, 12]
 
-      # This will:
-      # 1. Create a placement group to place the instances close to one another
-      # 2. Create and attach the necessary security group rules (and security group)
-      # 3. Expose all of the available EFA interfaces on the launch template
-      enable_efa_support = true
-      enable_efa_only    = true
-      efa_indices        = [0, 4, 8, 12]
+  #     min_size     = 1
+  #     max_size     = 1
+  #     desired_size = 1
 
-      min_size     = 1
-      max_size     = 1
-      desired_size = 1
+  #     labels = {
+  #       "vpc.amazonaws.com/efa.present" = "true"
+  #       "nvidia.com/gpu.present"        = "true"
+  #     }
 
-      labels = {
-        "vpc.amazonaws.com/efa.present" = "true"
-        "nvidia.com/gpu.present"        = "true"
-      }
+  #     taints = {
+  #       # Ensure only GPU workloads are scheduled on this node group
+  #       gpu = {
+  #         key    = "nvidia.com/gpu"
+  #         value  = "true"
+  #         effect = "NO_SCHEDULE"
+  #       }
+  #     }
+  #   }
+  # }
 
-      taints = {
-        # Ensure only GPU workloads are scheduled on this node group
-        gpu = {
-          key    = "nvidia.com/gpu"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      }
-    }
-  }
+  # access_entries = {
+  #   # One access entry with a policy associated
+  #   ex-single = {
+  #     principal_arn = aws_iam_role.this["single"].arn
 
-  access_entries = {
-    # One access entry with a policy associated
-    ex-single = {
-      principal_arn = aws_iam_role.this["single"].arn
+  #     policy_associations = {
+  #       single = {
+  #         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+  #         access_scope = {
+  #           namespaces = ["default"]
+  #           type       = "namespace"
+  #         }
+  #       }
+  #     }
+  #   }
 
-      policy_associations = {
-        single = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
-          access_scope = {
-            namespaces = ["default"]
-            type       = "namespace"
-          }
-        }
-      }
-    }
+  #   # Example of adding multiple policies to a single access entry
+  #   ex-multiple = {
+  #     principal_arn = aws_iam_role.this["multiple"].arn
 
-    # Example of adding multiple policies to a single access entry
-    ex-multiple = {
-      principal_arn = aws_iam_role.this["multiple"].arn
+  #     policy_associations = {
+  #       ex-one = {
+  #         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+  #         access_scope = {
+  #           namespaces = ["default"]
+  #           type       = "namespace"
+  #         }
+  #       }
+  #       ex-two = {
+  #         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+  #         access_scope = {
+  #           type = "cluster"
+  #         }
+  #       }
+  #     }
+  #   }
 
-      policy_associations = {
-        ex-one = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
-          access_scope = {
-            namespaces = ["default"]
-            type       = "namespace"
-          }
-        }
-        ex-two = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
-          access_scope = {
-            type = "cluster"
-          }
-        }
-      }
-    }
+  #   no-policy = {
+  #     kubernetes_groups = ["something"]
+  #     principal_arn     = data.aws_caller_identity.current.arn
+  #     user_name         = "someone"
+  #   }
+  # }
 
-    no-policy = {
-      kubernetes_groups = ["something"]
-      principal_arn     = data.aws_caller_identity.current.arn
-      user_name         = "someone"
-    }
-  }
-
-  tags = local.tags
-}
+  # tags = local.tags
+# }
 
 # module "disabled_eks" {
 #   source = "../.."
 
 #   create = false
 # }
-
-################################################################################
-# Sub-Module Usage on Existing/Separate Cluster
-################################################################################
-
-module "eks_managed_node_group" {
-  source = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
-
-  name                 = "separate-eks-mng"
-  cluster_name         = module.eks.cluster_name
-  cluster_ip_family    = module.eks.cluster_ip_family
-  cluster_service_cidr = module.eks.cluster_service_cidr
-
-  subnet_ids                        = module.vpc.private_subnets
-  cluster_primary_security_group_id = module.eks.cluster_primary_security_group_id
-  vpc_security_group_ids            = [module.eks.node_security_group_id]
-
-  ami_type = "BOTTLEROCKET_x86_64"
-
-  # this will get added to what AWS provides
-  bootstrap_extra_args = <<-EOT
-    # extra args added
-    [settings.kernel]
-    lockdown = "integrity"
-
-    [settings.kubernetes.node-labels]
-    "label1" = "foo"
-    "label2" = "bar"
-  EOT
-
-  tags = merge(local.tags, { Separate = "eks-managed-node-group" })
-}
 
 
 
