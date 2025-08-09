@@ -14,57 +14,95 @@ provider "kubernetes" {
   }
 }
 
+
 data "aws_caller_identity" "current" {}
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "example" {
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 locals {
-  name            = "ex-${replace(basename(path.cwd), "_", "-")}"
-  cluster_version = "1.24"
-  region          = "us-west-1"
+  name   = "eks-fundwave"
+  region = "us-west-1"
+  cluster_version = "1.33"
 
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 1)
 
   tags = {
     Example    = local.name
-    GithubRepo = "terraform-aws-eks"
-    GithubOrg  = "terraform-aws-modules"
+    GithubRepo = "Johnstx/fundwave"
+    GithubOrg  = "johnstx"
   }
 }
+
+################################################################################
+# VPC
+################################################################################
+
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 6.0"
+
+  name = local.name
+  cidr = local.vpc_cidr
+
+  azs             = local.azs
+  private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
+  public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
+  intra_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 52)]
+
+  enable_nat_gateway = true
+  single_nat_gateway = true
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = 1
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = 1
+  }
+
+  tags = local.tags
+}
+
 
 ################################################################################
 # EKS Module
 ################################################################################
 
 module "eks" {
-  source = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
-  cluster_name                   = local.name
-  cluster_version                = local.cluster_version
-  cluster_endpoint_public_access = true
+  source = "terraform-aws-modules/eks"
+
+  name                   = local.name
+  kubernetes_version     = local.kubernetes_version
+  endpoint_public_access = true
 
   # IPV6
-  cluster_ip_family = "ipv6"
-
-  # We are using the IRSA created below for permissions
-  # However, we have to deploy with the policy attached FIRST (when creating a fresh cluster)
-  # and then turn this off after the cluster/node group is created. Without this initial policy,
-  # the VPC CNI fails to assign IPs and nodes cannot join the cluster
-  # See https://github.com/aws/containers-roadmap/issues/1666 for more context
-  # TODO - remove this policy once AWS releases a managed version similar to AmazonEKS_CNI_Policy (IPv4)
+  ip_family                  = "ipv6"
   create_cni_ipv6_iam_policy = true
 
-  cluster_addons = {
+  enable_cluster_creator_admin_permissions = true
+
+  addons = {
     coredns = {
       most_recent = true
     }
-    kube-proxy = { 
+    eks-node-monitoring-agent = {
+      most_recent = true
+    }
+    eks-pod-identity-agent = {
+      before_compute = true
+      most_recent    = true
+    }
+    kube-proxy = {
       most_recent = true
     }
     vpc-cni = {
-      most_recent              = true
-      before_compute           = true
-      service_account_role_arn = module.vpc_cni_irsa.iam_role_arn
+      most_recent    = true
+      before_compute = true
       configuration_values = jsonencode({
         env = {
           # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
@@ -72,26 +110,24 @@ module "eks" {
           WARM_PREFIX_TARGET       = "1"
         }
       })
+      pod_identity_association = [{
+        role_arn        = module.aws_vpc_cni_ipv6_pod_identity.iam_role_arn
+        service_account = "aws-node"
+      }]
     }
+  }
+
+  upgrade_policy = {
+    support_type = "STANDARD"
+  }
+
+  zonal_shift_config = {
+    enabled = true
   }
 
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.intra_subnets
-
-  manage_aws_auth_configmap = true
-
-  eks_managed_node_group_defaults = {
-    ami_type       = "AL2_x86_64"
-    instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-
-    # We are using the IRSA created below for permissions
-    # However, we have to deploy with the policy attached FIRST (when creating a fresh cluster)
-    # and then turn this off after the cluster/node group is created. Without this initial policy,
-    # the VPC CNI fails to assign IPs and nodes cannot join the cluster
-    # See https://github.com/aws/containers-roadmap/issues/1666 for more context
-    iam_role_attach_cni_policy = true
-  }
 
   eks_managed_node_groups = {
     # Default node group - as provided by AWS EKS
@@ -109,20 +145,26 @@ module "eks" {
       }
     }
 
-    # Default node group - as provided by AWS EKS using Bottlerocket
+    placement_group = {
+      create_placement_group = true
+      subnet_ids             = slice(module.vpc.private_subnets, 0, 1)
+      instance_types         = ["m5.large", "m5n.large", "m5zn.large"]
+    }
+
+     # Default node group - as provided by AWS EKS using Bottlerocket
     bottlerocket_default = {
       # By default, the module creates a launch template to ensure tags are propagated to instances, etc.,
       # so we need to disable it to use the default template provided by the AWS EKS managed node group service
       use_custom_launch_template = false
 
       ami_type = "BOTTLEROCKET_x86_64"
-      platform = "bottlerocket"
     }
 
     # Adds to the AWS provided user data
     bottlerocket_add = {
       ami_type = "BOTTLEROCKET_x86_64"
-      platform = "bottlerocket"
+
+      use_latest_ami_release_version = true
 
       # This will get added to what AWS provides
       bootstrap_extra_args = <<-EOT
@@ -132,11 +174,11 @@ module "eks" {
       EOT
     }
 
-    # Custom AMI, using module provided bootstrap data
-    bottlerocket_custom = {
+
+bottlerocket_custom = {
       # Current bottlerocket AMI
       ami_id   = data.aws_ami.eks_default_bottlerocket.image_id
-      platform = "bottlerocket"
+      ami_type = "BOTTLEROCKET_x86_64"
 
       # Use module user data template to bootstrap
       enable_bootstrap_user_data = true
@@ -146,17 +188,21 @@ module "eks" {
         # It is disabled by default, but can be disabled explicitly.
         [settings.host-containers.admin]
         enabled = false
+
         # The control host container provides out-of-band access via SSM.
         # It is enabled by default, and can be disabled if you do not expect to use SSM.
         # This could leave you with no way to access the API and change settings on an existing node!
         [settings.host-containers.control]
         enabled = true
+
         # extra args added
         [settings.kernel]
         lockdown = "integrity"
+
         [settings.kubernetes.node-labels]
         label1 = "foo"
         label2 = "bar"
+
         [settings.kubernetes.node-taints]
         dedicated = "experimental:PreferNoSchedule"
         special = "true:NoSchedule"
@@ -165,7 +211,7 @@ module "eks" {
 
     # Use a custom AMI
     custom_ami = {
-      ami_type = "AL2_ARM_64"
+      ami_type = "AL2023_ARM_64_STANDARD"
       # Current default AMI used by managed node groups - pseudo "custom"
       ami_id = data.aws_ami.eks_default_arm.image_id
 
@@ -186,19 +232,32 @@ module "eks" {
       subnet_ids = module.vpc.private_subnets
 
       min_size     = 1
-      max_size     = 7
+      max_size     = 3
       desired_size = 1
 
       ami_id                     = data.aws_ami.eks_default.image_id
       enable_bootstrap_user_data = true
 
-      pre_bootstrap_user_data = <<-EOT
-        export FOO=bar
-      EOT
-
-      post_bootstrap_user_data = <<-EOT
-        echo "you are free little kubelet!"
-      EOT
+      cloudinit_pre_nodeadm = [{
+        content      = <<-EOT
+          ---
+          apiVersion: node.eks.aws/v1alpha1
+          kind: NodeConfig
+          spec:
+            kubelet:
+              config:
+                shutdownGracePeriod: 30s
+        EOT
+        content_type = "application/node.eks.aws"
+      }]
+    
+       # This is only possible with a custom AMI or self-managed node group
+      cloudinit_post_nodeadm = [{
+        content      = <<-EOT
+          echo "All done"
+        EOT
+        content_type = "text/x-shellscript; charset=\"us-ascii\""
+      }]
 
       capacity_type        = "SPOT"
       force_update_version = true
@@ -207,14 +266,6 @@ module "eks" {
         GithubRepo = "terraform-aws-eks"
         GithubOrg  = "terraform-aws-modules"
       }
-
-      taints = [
-        {
-          key    = "dedicated"
-          value  = "gpuGroup"
-          effect = "NO_SCHEDULE"
-        }
-      ]
 
       update_config = {
         max_unavailable_percentage = 33 # or set `max_unavailable`
@@ -248,6 +299,10 @@ module "eks" {
         instance_metadata_tags      = "disabled"
       }
 
+      node_repair_config = {
+        enabled = true
+      }
+
       create_iam_role          = true
       iam_role_name            = "eks-managed-node-group-complete-example"
       iam_role_use_name_prefix = false
@@ -259,44 +314,135 @@ module "eks" {
         AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
         additional                         = aws_iam_policy.node_additional.arn
       }
+      iam_role_policy_statements = [
+        {
+          sid    = "ECRPullThroughCache"
+          effect = "Allow"
+          actions = [
+            "ecr:CreateRepository",
+            "ecr:BatchImportUpstreamImage",
+          ]
+          resources = ["*"]
+        }
+      ]
 
-    schedules = {
-    scale-up = {
-        min_size     = 2
-        max_size     = "-1" # Retains current max size
-        desired_size = 2
-        start_time   = "2023-05-10T00:00:00Z" # Updated start time to May 10, 2023. Ensure to adjust to a time in the future
-        end_time     = "2024-03-05T00:00:00Z"
-        timezone     = "Etc/GMT+0"
-        recurrence   = "0 0 * * *"
-    },
-    scale-down = {
-        min_size     = 0
-        max_size     = "-1" # Retains current max size
-        desired_size = 0
-        start_time   = "2023-05-11T12:00:00Z" # Updated start time to May 11, 2023. Ensure to adjust to a time in the future
-        end_time     = "2024-03-05T12:00:00Z"
-        timezone     = "Etc/GMT+0"
-        recurrence   = "0 12 * * *"
-    }
-    }
+      launch_template_tags = {
+        # enable discovery of autoscaling groups by cluster-autoscaler
+        "k8s.io/cluster-autoscaler/enabled" : true,
+        "k8s.io/cluster-autoscaler/${local.name}" : "owned",
+      }
 
       tags = {
         ExtraTag = "EKS managed node group complete example"
       }
+    }
+
+    efa = {
+      # Disabling automatic creation due to instance type/quota availability
+      # Can be enabled when appropriate for testing/validation
+      create = false
+
+      # The EKS AL2023 NVIDIA AMI provides all of the necessary components
+      # for accelerated workloads w/ EFA
+      ami_type       = "AL2023_x86_64_NVIDIA"
+      instance_types = ["p5e.48xlarge"]
+
+      # Mount instance store volumes in RAID-0 for kubelet and containerd
+      # https://github.com/awslabs/amazon-eks-ami/blob/master/doc/USER_GUIDE.md#raid-0-for-kubelet-and-containerd-raid0
+      cloudinit_pre_nodeadm = [
+        {
+          content_type = "application/node.eks.aws"
+          content      = <<-EOT
+            ---
+            apiVersion: node.eks.aws/v1alpha1
+            kind: NodeConfig
+            spec:
+              instance:
+                localStorage:
+                  strategy: RAID0
+          EOT
+        }
+      ]
+
+      # This will:
+      # 1. Create a placement group to place the instances close to one another
+      # 2. Create and attach the necessary security group rules (and security group)
+      # 3. Expose all of the available EFA interfaces on the launch template
+      enable_efa_support = true
+      enable_efa_only    = true
+      efa_indices        = [0, 4, 8, 12]
+
+      min_size     = 1
+      max_size     = 1
+      desired_size = 1
+
+      labels = {
+        "vpc.amazonaws.com/efa.present" = "true"
+        "nvidia.com/gpu.present"        = "true"
+      }
+
+      taints = {
+        # Ensure only GPU workloads are scheduled on this node group
+        gpu = {
+          key    = "nvidia.com/gpu"
+          value  = "true"
+          effect = "NO_SCHEDULE"
+        }
+      }
+    }
+  }
+
+  access_entries = {
+    # One access entry with a policy associated
+    ex-single = {
+      principal_arn = aws_iam_role.this["single"].arn
+
+      policy_associations = {
+        single = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+          access_scope = {
+            namespaces = ["default"]
+            type       = "namespace"
+          }
+        }
+      }
+    }
+
+    # Example of adding multiple policies to a single access entry
+    ex-multiple = {
+      principal_arn = aws_iam_role.this["multiple"].arn
+
+      policy_associations = {
+        ex-one = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+          access_scope = {
+            namespaces = ["default"]
+            type       = "namespace"
+          }
+        }
+        ex-two = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+
+    no-policy = {
+      kubernetes_groups = ["something"]
+      principal_arn     = data.aws_caller_identity.current.arn
+      user_name         = "someone"
     }
   }
 
   tags = local.tags
 }
 
-################################################################################
-# Supporting Resources
-################################################################################
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
+  version = "~> 6.0"
 
   name = local.name
   cidr = local.vpc_cidr
@@ -306,21 +452,17 @@ module "vpc" {
   public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
   intra_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 52)]
 
-  enable_ipv6                     = true
-  assign_ipv6_address_on_creation = true
-  create_egress_only_igw          = true
+  enable_nat_gateway     = true
+  single_nat_gateway     = true
+  enable_ipv6            = true
+  create_egress_only_igw = true
 
-  public_subnet_ipv6_prefixes  = [0, 1, 2]
-  private_subnet_ipv6_prefixes = [3, 4, 5]
-  intra_subnet_ipv6_prefixes   = [6, 7, 8]
-
-  enable_nat_gateway   = true
-  single_nat_gateway   = true
-  enable_dns_hostnames = true
-
-  enable_flow_log                      = true
-  create_flow_log_cloudwatch_iam_role  = true
-  create_flow_log_cloudwatch_log_group = true
+  public_subnet_ipv6_prefixes                    = [0, 1, 2]
+  public_subnet_assign_ipv6_address_on_creation  = true
+  private_subnet_ipv6_prefixes                   = [3, 4, 5]
+  private_subnet_assign_ipv6_address_on_creation = true
+  intra_subnet_ipv6_prefixes                     = [6, 7, 8]
+  intra_subnet_assign_ipv6_address_on_creation   = true
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
@@ -333,27 +475,21 @@ module "vpc" {
   tags = local.tags
 }
 
-module "vpc_cni_irsa" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.0"
+module "aws_vpc_cni_ipv6_pod_identity" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 1.6"
 
-  role_name_prefix      = "VPC-CNI-IRSA"
-  attach_vpc_cni_policy = true
-  vpc_cni_enable_ipv6   = true
+  name = "aws-vpc-cni-ipv6"
 
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:aws-node"]
-    }
-  }
+  attach_aws_vpc_cni_policy = true
+  aws_vpc_cni_enable_ipv6   = true
 
   tags = local.tags
 }
 
 module "ebs_kms_key" {
   source  = "terraform-aws-modules/kms/aws"
-  version = "~> 1.5"
+  version = "~> 4.0"
 
   description = "Customer managed key to encrypt EKS managed node group volumes"
 
@@ -435,7 +571,7 @@ data "aws_ami" "eks_default" {
 
   filter {
     name   = "name"
-    values = ["amazon-eks-node-${local.cluster_version}-v*"]
+    values = ["amazon-eks-node-al2023-x86_64-standard-${local.cluster_version}-v*"]
   }
 }
 
@@ -445,7 +581,7 @@ data "aws_ami" "eks_default_arm" {
 
   filter {
     name   = "name"
-    values = ["amazon-eks-arm64-node-${local.cluster_version}-v*"]
+    values = ["amazon-eks-node-al2023-arm64-standard-${local.cluster_version}-v*"]
   }
 }
 
@@ -457,4 +593,27 @@ data "aws_ami" "eks_default_bottlerocket" {
     name   = "name"
     values = ["bottlerocket-aws-k8s-${local.cluster_version}-x86_64-*"]
   }
+}
+
+resource "aws_iam_role" "this" {
+  for_each = toset(["single", "multiple"])
+
+  name = "ex-${each.key}"
+
+  # Just using for this example
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = "Example"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  tags = local.tags
 }
