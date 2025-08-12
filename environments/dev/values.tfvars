@@ -1,1 +1,1 @@
-iam_role_attach_cni_policy = false
+iam_role_attach_cni_policy = true
