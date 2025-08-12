@@ -527,7 +527,8 @@ resource "aws_security_group" "remote_access" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/8"]
+    ipv6_cidr_blocks = ["2600:1f14:abcd:1234::/128"]
+    # cidr_blocks = ["10.0.0.0/8"]
   }
 
   egress {
