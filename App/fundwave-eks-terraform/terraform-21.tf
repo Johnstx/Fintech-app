@@ -76,11 +76,10 @@ locals {
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
   version = "~> 21.0"
-  cluster_name                = local.name
+  name                = local.name
   kubernetes_version          = local.cluster_version
   endpoint_public_access      = true
-  subnets                     = module.vpc.private_subnets
-
+ 
   # IPV6
   ip_family                  = "ipv6"
   create_cni_ipv6_iam_policy = true
@@ -121,15 +120,12 @@ module "eks" {
   upgrade_policy = {
     support_type = "STANDARD"
   }
-
   zonal_shift_config = {
     enabled = true
   }
-
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.intra_subnets
-
   eks_managed_node_groups = {
     # Default node group - as provided by AWS EKS
     default_node_group = {
@@ -174,7 +170,6 @@ module "eks" {
         lockdown = "integrity"
       EOT
     }
-
 
 bottlerocket_custom = {
       # Current bottlerocket AMI
@@ -374,7 +369,7 @@ bottlerocket_custom = {
       efa_indices        = [0, 4, 8, 12]
 
       min_size     = 1
-      max_size     = 1
+      max_size     = 2
       desired_size = 1
 
       labels = {
@@ -441,40 +436,40 @@ bottlerocket_custom = {
 }
 
 
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 6.0"
+# module "vpc" {
+#   source  = "terraform-aws-modules/vpc/aws"
+#   version = "~> 6.0"
 
-  name = local.name
-  cidr = local.vpc_cidr
+#   name = local.name
+#   cidr = local.vpc_cidr
 
-  azs             = local.azs
-  private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
-  public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
-  intra_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 52)]
+#   azs             = local.azs
+#   private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
+#   public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
+#   intra_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 52)]
 
-  enable_nat_gateway     = true
-  single_nat_gateway     = true
-  enable_ipv6            = true
-  create_egress_only_igw = true
+#   enable_nat_gateway     = true
+#   single_nat_gateway     = true
+#   enable_ipv6            = true
+#   create_egress_only_igw = true
 
-  public_subnet_ipv6_prefixes                    = [0, 1, 2]
-  public_subnet_assign_ipv6_address_on_creation  = true
-  private_subnet_ipv6_prefixes                   = [3, 4, 5]
-  private_subnet_assign_ipv6_address_on_creation = true
-  intra_subnet_ipv6_prefixes                     = [6, 7, 8]
-  intra_subnet_assign_ipv6_address_on_creation   = true
+#   public_subnet_ipv6_prefixes                    = [0, 1, 2]
+#   public_subnet_assign_ipv6_address_on_creation  = true
+#   private_subnet_ipv6_prefixes                   = [3, 4, 5]
+#   private_subnet_assign_ipv6_address_on_creation = true
+#   intra_subnet_ipv6_prefixes                     = [6, 7, 8]
+#   intra_subnet_assign_ipv6_address_on_creation   = true
 
-  public_subnet_tags = {
-    "kubernetes.io/role/elb" = 1
-  }
+#   public_subnet_tags = {
+#     "kubernetes.io/role/elb" = 1
+#   }
 
-  private_subnet_tags = {
-    "kubernetes.io/role/internal-elb" = 1
-  }
+#   private_subnet_tags = {
+#     "kubernetes.io/role/internal-elb" = 1
+#   }
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
 
 module "aws_vpc_cni_ipv6_pod_identity" {
   source  = "terraform-aws-modules/eks-pod-identity/aws"
