@@ -16,7 +16,7 @@ provider "kubernetes" {
 
 
 data "aws_caller_identity" "current" {}
-data "aws_availability_zones" "example" {
+data "aws_availability_zones" "available" {
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
@@ -76,9 +76,11 @@ locals {
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
 
-  name                   = local.name
-  kubernetes_version     = local.kubernetes_version
-  endpoint_public_access = true
+  name                        = local.name
+  cluster_name                = local.name
+  kubernetes_version          = local.cluster_version
+  endpoint_public_access      = true
+  subnets                     = module.vpc.private_subnets
 
   # IPV6
   ip_family                  = "ipv6"
