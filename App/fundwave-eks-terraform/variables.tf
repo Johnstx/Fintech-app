@@ -55,10 +55,3 @@ variable "private_subnets" {
   type        = list(string)
   default     = []
 }
-
-variable "intra_subnets" {
-  description = "A list of intra subnets inside the VPC"
-  type        = list(string)
-  default     = []
-}
-
