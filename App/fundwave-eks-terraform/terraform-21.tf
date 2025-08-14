@@ -29,8 +29,8 @@ locals {
   cluster_version = "1.33"
 
   vpc_cidr = "10.0.0.0/16"
-  azs      =  ["us-west-1a", "us-west-1b"]
-  # slice(data.aws_availability_zones.available.names, 0, 2)
+  azs      =  slice(data.aws_availability_zones.available.names, 0, 2)
+  
 
   tags = {
     Example    = local.name
