@@ -25,11 +25,11 @@ data "aws_availability_zones" "available" {
 
 locals {
   name   = "eks-fundwave"
-  region = "us-east-1"
+  region = "us-west-1"
   cluster_version = "1.33"
 
   vpc_cidr = "10.0.0.0/16"
-  azs      = slice(data.aws_availability_zones.available.names, 0, 1)
+  azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
   tags = {
     Example    = local.name
@@ -144,7 +144,7 @@ module "eks" {
 
     placement_group = {
       create_placement_group = true
-      subnet_ids             = slice(module.vpc.private_subnets, 0, 1)
+      subnet_ids             = slice(module.vpc.private_subnets, 0, 3)
       instance_types         = ["m5.large", "m5n.large", "m5zn.large"]
     }
 
@@ -526,9 +526,8 @@ resource "aws_security_group" "remote_access" {
     description = "SSH access"
     from_port   = 22
     to_port     = 22
-    protocol    = "tcp"
-    ipv6_cidr_blocks = ["2600:1f14:abcd:1234::/128"]
-    # cidr_blocks = ["10.0.0.0/8"]
+    protocol    = "tcp" 
+    cidr_blocks = ["10.0.0.0/8"]
   }
 
   egress {
@@ -538,7 +537,7 @@ resource "aws_security_group" "remote_access" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-
+                                                                          
   tags = merge(local.tags, { Name = "${local.name}-remote" })
 }
 
