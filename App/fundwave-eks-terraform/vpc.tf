@@ -1,6 +1,6 @@
 
 module "vpc" {
-  source  = "/modules/vpc"
+  source  = "./modules/vpc"
   version = "~> 6.0"
 
   name = local.name
