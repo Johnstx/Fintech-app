@@ -1,7 +1,7 @@
 
 module "vpc" {
   source  = "./modules/vpc-my"
-  version = "~> 6.0"
+  # version = "~> 6.0"
 
   name = local.name
   cidr = local.vpc_cidr
