@@ -124,23 +124,12 @@ variable "vpc_block_public_access_exclusions" {
   default     = {}
 }
 
-variable "cidr" {
-  description = "(Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4_netmask_length` & `ipv4_ipam_pool_id`"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-variable "ipv4_ipam_pool_id" {
-  description = "(Optional) The ID of the IPAM pool to use for IPv4 CIDR allocation. If not set, `cidr` must be provided."
-  type        = string
-  default     = ""
-}
 
 variable "ipv6_native" {
   type        = bool
   default     = true
   description = "Set to true for IPv6-native subnets (no IPv4 CIDRs)."
 }
-
 
 variable "private_subnet_ipv6_native" {
   description = "Indicates whether to create an IPv6-only subnet. Default: `false`"
@@ -178,11 +167,6 @@ variable "intra_subnet_ipv6_prefixes" {
   default     = []
 }
 
-variable "create_vpc" {
-  description = "Controls if VPC should be created (it affects almost all resources)"
-  type        = bool
-  default     = true
-}
 
 variable "intra_subnet_ipv6_native" {
   description = "Indicates whether to create an IPv6-only subnet. Default: `false`"
@@ -236,35 +220,7 @@ variable "one_nat_gateway_per_az" {
   default     = false
 }
 
-variable "public_subnets" {
-  description = "A list of public subnets inside the VPC"
-  type        = list(string)
-  default     = []
-}
 
-variable "public_subnet_assign_ipv6_address_on_creation" {
-  description = "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`"
-  type        = bool
-  default     = false
-}
-
-variable "public_subnet_enable_dns64" {
-  description = "Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default: `true`"
-  type        = bool
-  default     = true
-}
-
-variable "public_subnet_enable_resource_name_dns_aaaa_record_on_launch" {
-  description = "Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `true`"
-  type        = bool
-  default     = true
-}
-
-variable "public_subnet_enable_resource_name_dns_a_record_on_launch" {
-  description = "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`"
-  type        = bool
-  default     = false
-}
 
 variable "create_multiple_public_route_tables" {
   description = "Indicates whether to create a separate route table for each public subnet. Default: `false`"
@@ -272,23 +228,6 @@ variable "create_multiple_public_route_tables" {
   default     = false
 }
 
-variable "public_subnet_ipv6_prefixes" {
-  description = "Assigns IPv6 public subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list"
-  type        = list(string)
-  default     = []
-}
-
-variable "public_subnet_ipv6_native" {
-  description = "Indicates whether to create an IPv6-only subnet. Default: `false`"
-  type        = bool
-  default     = false
-}
-
-variable "map_public_ip_on_launch" {
-  description = "Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is `false`"
-  type        = bool
-  default     = false
-}
 
 variable "public_subnet_private_dns_hostname_type_on_launch" {
   description = "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-stack and IPv4-only subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name`, `resource-name`"
@@ -302,11 +241,6 @@ variable "public_subnet_names" {
   default     = []
 }
 
-variable "private_subnets" {
-  description = "A list of private subnets inside the VPC"
-  type        = list(string)
-  default     = []
-}
 
 variable "private_subnet_assign_ipv6_address_on_creation" {
   description = "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`"
@@ -332,17 +266,6 @@ variable "private_subnet_enable_resource_name_dns_a_record_on_launch" {
   default     = false
 }
 
-variable "private_subnet_ipv6_prefixes" {
-  description = "Assigns IPv6 private subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list"
-  type        = list(string)
-  default     = []
-}
-
-variable "private_subnet_ipv6_native" {
-  description = "Indicates whether to create an IPv6-only subnet. Default: `false`"
-  type        = bool
-  default     = false
-}
 
 variable "private_subnet_private_dns_hostname_type_on_launch" {
   description = "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-stack and IPv4-only subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name`, `resource-name`"
@@ -453,11 +376,6 @@ variable "single_nat_gateway" {
   default     = false
 }
 
-variable "one_nat_gateway_per_az" {
-  description = "Should be true if you want only one NAT Gateway per availability zone. Requires `var.azs` to be set, and the number of `public_subnets` created to be greater than or equal to the number of availability zones specified in `var.azs`"
-  type        = bool
-  default     = false
-}
 
 variable "external_nat_ips" {
   description = "List of EIPs to be used for `nat_public_ips` output (used in combination with reuse_nat_ips and external_nat_ip_ids)"
@@ -481,11 +399,6 @@ variable "nat_eip_tags" {
 # Intra Subnets
 ################################################################################
 
-variable "intra_subnets" {
-  description = "A list of intra subnets inside the VPC"
-  type        = list(string)
-  default     = []
-}
 
 variable "intra_subnet_assign_ipv6_address_on_creation" {
   description = "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`"
@@ -517,17 +430,6 @@ variable "create_multiple_intra_route_tables" {
   default     = false
 }
 
-variable "intra_subnet_ipv6_prefixes" {
-  description = "Assigns IPv6 intra subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list"
-  type        = list(string)
-  default     = []
-}
-
-variable "intra_subnet_ipv6_native" {
-  description = "Indicates whether to create an IPv6-only subnet. Default: `false`"
-  type        = bool
-  default     = false
-}
 
 variable "intra_subnet_private_dns_hostname_type_on_launch" {
   description = "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-stack and IPv4-only subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name`, `resource-name`"
@@ -1026,12 +928,6 @@ variable "reuse_nat_ips" {
 
 variable "external_nat_ip_ids" {
   description = "List of EIP IDs to be assigned to the NAT Gateways (used in combination with reuse_nat_ips)"
-  type        = list(string)
-  default     = []
-}
-
-variable "external_nat_ips" {
-  description = "List of EIPs to be used for `nat_public_ips` output (used in combination with reuse_nat_ips and external_nat_ip_ids)"
   type        = list(string)
   default     = []
 }
