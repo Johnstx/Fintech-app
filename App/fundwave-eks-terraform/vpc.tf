@@ -1,6 +1,6 @@
 
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
+  source  = "/modules/vpc"
   version = "~> 6.0"
 
   name = local.name
