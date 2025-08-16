@@ -124,9 +124,14 @@ module "eks" {
   zonal_shift_config = {
     enabled = true
   }
-  vpc_id                   = module.vpc.vpc_id
-  subnet_ids               = module.vpc.private_subnets
-  control_plane_subnet_ids = module.vpc.intra_subnets
+
+vpc_id                   = aws_vpc.this[0].id
+subnet_ids               = aws_subnet.private[*].id
+control_plane_subnet_ids = aws_subnet.intra[*].id
+
+  # vpc_id                   = module.vpc.vpc_id
+  # subnet_ids               = module.vpc.private_subnets
+  # control_plane_subnet_ids = module.vpc.intra_subnets
   eks_managed_node_groups = {
     # Default node group - as provided by AWS EKS
     default_node_group = {
@@ -521,7 +526,7 @@ module "key_pair" {
 resource "aws_security_group" "remote_access" {
   name_prefix = "${local.name}-remote-access"
   description = "Allow remote SSH access"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id                   = aws_vpc.this[0].id
 
   ingress {
     description = "SSH access"
