@@ -10,6 +10,10 @@ data "aws_availability_zones" "available" {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
+
+
 locals {
   name   = "inyiri-eks"
   region = "us-west-1"
