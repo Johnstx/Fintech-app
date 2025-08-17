@@ -52,7 +52,12 @@ jobs:
           approvers: 'Johnstx'
           minimum-approvals: 1
           
+      # - name: Terraform Apply
+      #   if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+      #   run: terraform apply tfplan
+      #   working-directory: ./App/fundwave-eks-terraform
+
       - name: Terraform Apply
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         run: terraform apply tfplan
         working-directory: ./App/fundwave-eks-terraform
