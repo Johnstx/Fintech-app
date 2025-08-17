@@ -36,7 +36,7 @@ jobs:
       - name: Manual Approval for Destroy
         uses: trstringer/manual-approval@v1
         with:
-          secret: ${{ secrets.MANUAL_APPROVAL_TOKEN }}
+          secret: ${{ secrets.REPO_TOKEN }}
           approvers: 'Johnstx'  
           minimum-approvals: 1
           issue-title: "Terraform Destroy Approval Required"
