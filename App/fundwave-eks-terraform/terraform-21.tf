@@ -121,22 +121,22 @@ module "eks_bottlerocket" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  access_entries = {
-    # One access entry with a policy associated
-    example = {
-      principal_arn = "arn:aws:iam::673572871288:user/Inyiri"
+  # access_entries = {
+  #   # One access entry with a policy associated
+  #   example = {
+  #     principal_arn = "arn:aws:iam::673572871288:user/Inyiri"
 
-      policy_associations = {
-        example = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
-          access_scope = {
-            namespaces = ["default"]
-            type       = "namespace"
-          }
-        }
-      }
-    }
-  }
+  #     policy_associations = {
+  #       example = {
+  #         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+  #         access_scope = {
+  #           namespaces = ["default"]
+  #           type       = "namespace"
+  #         }
+  #       }
+  #     }
+  #   }
+  # }
   
   
   
@@ -188,18 +188,18 @@ module "eks_bottlerocket" {
   
 }
 
-resource "aws_iam_role" "eks_admin" {
-  name = "EKSAdmin"
+# resource "aws_iam_role" "eks_admin" {
+#   name = "EKSAdmin"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [{
+#       Effect = "Allow"
+#       Principal = {
+#         AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#       }
+#       Action = "sts:AssumeRole"
+#     }]
+#   })
+# }
 
