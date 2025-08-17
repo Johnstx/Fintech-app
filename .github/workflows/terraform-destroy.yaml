@@ -30,7 +30,7 @@ jobs:
         working-directory: ./App/fundwave-eks-terraform
 
       - name: Terraform Plan Destroy
-        run: terraform plan -destroy -var-file=environments/${{ github.event.inputs.environment }}/values.tfvars -out=tfplan_destroy
+        run: terraform plan -destroy -var-file=../../environments/${{ github.event.inputs.environment }}/values.tfvars -out=tfplan_destroy
         working-directory: ./App/fundwave-eks-terraform
 
       - name: Manual Approval for Destroy
@@ -45,5 +45,5 @@ jobs:
             Please review the plan and approve or deny.
 
       - name: Terraform Destroy
-        run: terraform destroy -var-file=environments/${{ github.event.inputs.environment }}/values.tfvars -auto-approve
+        run: terraform destroy -var-file=../../environments/${{ github.event.inputs.environment }}/values.tfvars -auto-approve
         working-directory: ./App/fundwave-eks-terraform
