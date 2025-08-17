@@ -70,7 +70,18 @@ module "eks_bottlerocket" {
 
   name               = "${local.name}-bottlerocket"
   kubernetes_version = "1.33"
+  authentication_mode = "API_AND_CONFIG_MAP"
 
+    # Optional: Adds the current caller identity as an administrator via cluster access entry
+  enable_cluster_creator_admin_permissions = true
+
+  compute_config = {
+    enabled    = true
+    node_pools = ["general-purpose"]
+  }
+  create_iam_role = true
+  
+  # Enable public endpoint access   
   endpoint_public_access = true
   # EKS Addons
   addons = {
