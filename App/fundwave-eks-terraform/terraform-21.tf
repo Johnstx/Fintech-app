@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 data "aws_availability_zones" "available" {
-  # Exclude local zones
+  state = "available" # Exclude local zones
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
@@ -19,7 +19,8 @@ locals {
   region = "us-west-1"
 
   vpc_cidr = "10.0.0.0/16"
-  azs      = slice(data.aws_availability_zones.available.names, 0, 2)
+  # azs      = slice(data.aws_availability_zones.available.names, 0, 2)
+  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   tags = {
     Example    = local.name
@@ -36,16 +37,28 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 6.0"
 
-  name = local.name
+  name = "${local.name}-vpc"
   cidr = local.vpc_cidr
 
-  azs             = local.azs
-  private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
-  public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
-  intra_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 52)]
+  # azs             = local.azs
+  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+  private_subnets = [cidrsubnet(local.vpc_cidr, 8, 110), cidrsubnet(local.vpc_cidr, 8, 120)]
+  public_subnets  = [cidrsubnet(local.vpc_cidr, 8, 10), cidrsubnet(local.vpc_cidr, 8, 20)]
+  intra_subnets   = [cidrsubnet(local.vpc_cidr, 8, 30), cidrsubnet(local.vpc_cidr, 8, 40)]
+
+  # private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
+  # public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
+  # intra_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 52)]
+  create_igw = true
+  enable_dns_hostnames = true
+
 
   enable_nat_gateway = true
   single_nat_gateway = true
+  one_nat_gateway_per_az = false
+
+  create_private_nat_gateway_route = true
+
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
@@ -70,19 +83,29 @@ module "eks_bottlerocket" {
 
   name               = "${local.name}-bottlerocket"
   kubernetes_version = "1.33"
-  authentication_mode = "API_AND_CONFIG_MAP"
+  authentication_mode = "API"
 
     # Optional: Adds the current caller identity as an administrator via cluster access entry
   enable_cluster_creator_admin_permissions = true
+  # Enable public endpoint access   
+  endpoint_private_access = true
+  endpoint_public_access  = true
 
+  control_plane_subnet_ids = concat(module.vpc.public_subnets, module.vpc.private_subnets)
+
+  create_security_group =true
+  security_group_description = "inyiri-eks-bottlerocket-sg"
+
+
+  
   compute_config = {
     enabled    = true
     node_pools = ["general-purpose"]
   }
   create_iam_role = true
+
   
-  # Enable public endpoint access   
-  endpoint_public_access = true
+  
   # EKS Addons
   addons = {
     coredns = {}
@@ -114,11 +137,23 @@ module "eks_bottlerocket" {
       }
     }
   }
-    
+  
+  
+  
+  
+  create_node_security_group = true
+  node_security_group_enable_recommended_rules = true
+  node_security_group_description = "inyiri-eks-bottlerocket-node-sg"  
+
+  node_security_group_use_name_prefix = true
   eks_managed_node_groups = {
     example = {
+      # Optional: Specify the AMI type to use for the node group
+      name          = "demo-eks-managed-node"
       ami_type       = "BOTTLEROCKET_x86_64"
       instance_types = ["m6i.large"]
+      capacity_type = "SPOT"
+    
 
       min_size = 1
       max_size = 2
