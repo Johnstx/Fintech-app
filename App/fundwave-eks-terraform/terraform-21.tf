@@ -109,12 +109,12 @@ module "eks_bottlerocket" {
       ami_type       = "BOTTLEROCKET_x86_64"
       instance_types = ["m6i.large"]
 
-      min_size = 2
-      max_size = 5
+      min_size = 1
+      max_size = 2
       # This value is ignored after the initial creation
       # https://github.com/bryantbiggs/eks-desired-size-hack
-      desired_size = 2
-      enable_efa_support = true
+      desired_size = 1
+      
       # This is not required - demonstrates how to pass additional configuration
       # Ref https://bottlerocket.dev/en/os/1.19.x/api/settings/
       bootstrap_extra_args = <<-EOT
@@ -135,40 +135,6 @@ module "eks_bottlerocket" {
       EOT
     }
 
-
-    al2023_nvidia = {
-      # The EKS AL2023 NVIDIA AMI provides all of the necessary components
-      # for accelerated workloads w/ EFA
-      ami_type       = "AL2023_x86_64_NVIDIA"
-      instance_types = ["p5.48xlarge"]
-
-      # Exposes all EFA interfaces on the launch template created by the node group(s)
-      # This would expose all 32 EFA interfaces for the p5.48xlarge instance type
-      enable_efa_support = true
-
-      # Mount instance store volumes in RAID-0 for kubelet and containerd
-      # https://github.com/awslabs/amazon-eks-ami/blob/master/doc/USER_GUIDE.md#raid-0-for-kubelet-and-containerd-raid0
-      cloudinit_pre_nodeadm = [
-        {
-          content_type = "application/node.eks.aws"
-          content      = <<-EOT
-            ---
-            apiVersion: node.eks.aws/v1alpha1
-            kind: NodeConfig
-            spec:
-              instance:
-                localStorage:
-                  strategy: RAID0
-          EOT
-        }
-      ]
-
-      # EFA should only be enabled when connecting 2 or more nodes
-      # Do not use EFA on a single node workload
-      min_size     = 2
-      max_size     = 10
-      desired_size = 2
-    }
   }
   
 
