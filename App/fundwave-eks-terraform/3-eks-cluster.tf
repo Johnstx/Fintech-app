@@ -101,11 +101,10 @@ module "eks_demo" {
   # IAM role for the node group
   create_node_iam_role = true
   node_iam_role_name = "${local.name}-node-role"
-  node_iam_role_use_name_prefix = true
-  node_iam_role_additional_policies = [
-    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-   ]
-
+  node_iam_role_use_name_prefix = true 
+  node_iam_role_additional_policies = {
+    ssm = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
   # EKS managed node group
   eks_managed_node_groups = {
     example = {
