@@ -22,7 +22,7 @@ module "eks_demo" {
       before_compute = true
       most_recent    = true
     }
-    subnet_ids = module.vpc.private_subnets
+   
   }
 
     # Optional: Adds the current caller identity as an administrator via cluster access entry
