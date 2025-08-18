@@ -72,23 +72,25 @@ module "eks_demo" {
   # deletion_protection = true
 
 
- # Creating access entries for a new user, besides the cluster creator
-  # access_entries = {
-  #   # One access entry with a policy associated
-  #   example = {
-  #     principal_arn = "arn:aws:iam::account-id:user/new-user"
 
-  #     policy_associations = {
-  #       example = {
-  #         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
-  #         access_scope = {
-  #           namespaces = ["default"]
-  #           type       = "namespace"
-  #         }
-  #       }
-  #     }
-  #   }
-  # }
+
+ # Creating access entries for a new user, besides the cluster creator
+  access_entries = {
+  example = {
+    principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/eks-admin"
+
+    policy_associations = {
+      example = {
+        policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+        access_scope = {
+          namespaces = ["default"]
+          type       = "namespace"
+        }
+      }
+    }
+  }
+}
+
   
   # IAM role for service accounts
   enable_irsa = true
@@ -290,6 +292,7 @@ module "eks_demo" {
 }
 
 
+  
 
 
 
