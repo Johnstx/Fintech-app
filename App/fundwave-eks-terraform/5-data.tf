@@ -21,7 +21,8 @@ output "caller_arn" {
 }
 
 output "cluster_iam_role_arn" {
-  value = module.eks_demo.iam_role_arn
+  value =  module.eks_demo.cluster_iam_role_arn
+
 }
 output "node_iam_role_arn" {
   value = module.eks_demo.node_iam_role_arn

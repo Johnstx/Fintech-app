@@ -50,7 +50,9 @@ module "eks_demo" {
   create_iam_role = true
   iam_role_name = "${local.name}-eks-role"
   iam_role_description = "IAM role for ${local.name} EKS cluster"
-  iam_role_arn = module.eks_demo.iam_role_arn
+  # iam_role_arn = module.eks_demo.iam_role_arn
+  iam_role_arn = module.eks_demo.cluster_iam_role_arn
+
 
   # Option B: Use existing role (Especially useful for cross-account clusters, where roles are managed by a different account)
   # create_iam_role = false
