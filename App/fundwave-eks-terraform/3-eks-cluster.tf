@@ -11,8 +11,9 @@ module "eks_demo" {
   name               = "${local.name}-demo"
   kubernetes_version = "1.33"
   authentication_mode = "API"
-  ip_family = "ipv6"
+  ip_family = "ipv4"
   create_cni_ipv6_iam_policy = true
+  
 
     # EKS Addons
   addons = {

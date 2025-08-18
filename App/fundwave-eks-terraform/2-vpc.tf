@@ -29,6 +29,12 @@ module "vpc" {
   create_private_nat_gateway_route = true
 
 
+  # For ipv6 support
+   # Enable IPv6 CIDR assignment from AWS
+#   enable_ipv6  = true
+
+
+
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
   }
