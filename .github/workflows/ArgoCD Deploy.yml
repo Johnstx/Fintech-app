@@ -1,0 +1,48 @@
+- name: Deploy ArgoCD
+    # You may pin to the exact commit or the version.
+    # uses: cloudposse/github-action-deploy-argocd@7356b85794090fe604f3c757dbb999d762377ea4
+    uses: cloudposse/github-action-deploy-argocd@0.8.1
+    with:
+      # Cluster name
+      cluster: 
+      # AWS region
+      aws-region: # optional, default is us-east-1
+      # The path where lives the helmfile or helm chart.
+      path: 
+      # Toolchain ('helm', 'helmfile')
+      toolchain: # optional, default is helmfile
+      # SSM path to read environment secrets
+      ssm-path: 
+      # Operation with helmfiles. (valid options - `deploy`, `destroy`)
+      operation: # default is deploy
+      # Helmfile environment
+      environment: # optional, default is preview
+      # Application GitHub repository full name
+      repository: 
+      # Git ref
+      ref: 
+      # Git SHA (Depricated. Use `ref` instead)
+      gitref-sha: # optional, default is 
+      # Kubernetes namespace
+      namespace: 
+      # Application name
+      application: 
+      # Docker image
+      image: 
+      # Docker image tag
+      image-tag: 
+      # Debug mode
+      debug: # optional, default is false
+      # Helmfile values file
+      values_file: # optional, default is 
+      # The name of the label used to describe the helm release
+      release_label_name: # optional, default is release
+      # Github PAT to access argocd configuration repository
+      github-pat: 
+      # Wait until ArgoCD successfully apply the changes
+      synchronously: # optional, default is false
+      # Check retry count (for synchronously mode)
+      check-retry-count: # optional, default is 5
+      # Check retry interval (in seconds) (for synchronously mode)
+      check-retry-interval: # optional, default is 10
+            
