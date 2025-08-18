@@ -50,6 +50,7 @@ module "eks_demo" {
   create_iam_role = true
   iam_role_name = "${local.name}-eks-role"
   iam_role_description = "IAM role for ${local.name} EKS cluster"
+  iam_role_arn = module.eks_demo.iam_role_arn
 
   # Option B: Use existing role (Especially useful for cross-account clusters, where roles are managed by a different account)
   # create_iam_role = false
@@ -105,6 +106,8 @@ module "eks_demo" {
   create_node_iam_role = true
   node_iam_role_name = "${local.name}-node-role"
   node_iam_role_use_name_prefix = true 
+  node_iam_role_description = "IAM role for ${local.name} EKS nodes"
+
   node_iam_role_additional_policies = {
     ssm = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
