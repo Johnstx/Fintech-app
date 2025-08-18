@@ -77,11 +77,11 @@ module "eks_demo" {
  # Creating access entries for a new user, besides the cluster creator
   access_entries = {
   example = {
-    principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/eks-admin"
+    principal_arn = module.eks_demo.iam_role_arn
 
     policy_associations = {
       example = {
-        policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+        policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
         access_scope = {
           namespaces = ["default"]
           type       = "namespace"
@@ -110,7 +110,7 @@ module "eks_demo" {
   }
   # EKS managed node group
   eks_managed_node_groups = {
-    example = {
+    rocket = {
       # Optional: Specify the AMI type to use for the node group
       name          = "demo-eks-managed-node"
       ami_type       = "BOTTLEROCKET_x86_64"
@@ -144,7 +144,7 @@ module "eks_demo" {
       EOT
     }
 
-    example = {
+    AmazonLinux2 = {
       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
       instance_types = ["m6i.large"]
       ami_type       = "AL2023_x86_64_STANDARD"
