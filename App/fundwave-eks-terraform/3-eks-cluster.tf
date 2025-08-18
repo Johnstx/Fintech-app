@@ -76,8 +76,8 @@ module "eks_demo" {
 
  # Creating access entries for a new user, besides the cluster creator
   access_entries = {
-  example = {
-    principal_arn = module.eks_demo.iam_role_arn
+  rocket = {
+    principal_arn = module.eks_demo.cluster_iam_role_arn
 
     policy_associations = {
       example = {
