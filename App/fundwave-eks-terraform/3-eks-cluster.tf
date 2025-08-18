@@ -65,7 +65,7 @@ module "eks_demo" {
   security_group_use_name_prefix = true
   security_group_name = "${local.name}-sg"
   security_group_description = "Security group for ${local.name} cluster"
-  security_group_tags = "${local.name}-sg"
+
 
   # Enable/disable deletion protection for the cluster
   # deletion_protection = true
@@ -103,7 +103,7 @@ module "eks_demo" {
   node_iam_role_name = "${local.name}-node-role"
   node_iam_role_use_name_prefix = true
   node_iam_role_additional_policies = [
-    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
    ]
 
   # EKS managed node group
@@ -171,19 +171,19 @@ module "eks_demo" {
       ]
     }
 
-    custom_ami = {
-      ami_type = "AL2_ARM_64"
-      # Current default AMI used by managed node groups - pseudo "custom"
-      ami_id = data.aws_ami.eks_default_arm.image_id
+    # custom_ami = {
+    # #   ami_type = "AL2_ARM_64"
+    # #   # Current default AMI used by managed node groups - pseudo "custom"
+    # #   ami_id = data.aws_ami.eks_default_arm.image_id
 
-      # This will ensure the bootstrap user data is used to join the node
-      # By default, EKS managed node groups will not append bootstrap script;
-      # this adds it back in using the default template provided by the module
-      # Note: this assumes the AMI provided is an EKS optimized AMI derivative
-      enable_bootstrap_user_data = true
+    # #   # This will ensure the bootstrap user data is used to join the node
+    # #   # By default, EKS managed node groups will not append bootstrap script;
+    # #   # this adds it back in using the default template provided by the module
+    # #   # Note: this assumes the AMI provided is an EKS optimized AMI derivative
+    # #   enable_bootstrap_user_data = true
 
-      instance_types = ["t4g.medium"]
-    }
+    # #   instance_types = ["t4g.medium"]
+    # # }
 
 
 
