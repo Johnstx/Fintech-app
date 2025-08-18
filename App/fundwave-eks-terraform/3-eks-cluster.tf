@@ -20,18 +20,9 @@ module "eks_demo" {
     kube-proxy = {}
     vpc-cni = {
       before_compute = true
+      most_recent    = true
     }
-    eks-pod-identity-agent = {
-      before_compute = true
-      service_account_role_arn = module.vpc_cni_irsa.iam_role_arn
-      configuration_values = jsonencode({
-        env = {
-          # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
-          ENABLE_PREFIX_DELEGATION = "true"
-          WARM_PREFIX_TARGET       = "1"
-        }
-      })
-    }
+    subnet_ids = module.vpc.private_subnets
   }
 
     # Optional: Adds the current caller identity as an administrator via cluster access entry
@@ -74,7 +65,7 @@ module "eks_demo" {
   security_group_use_name_prefix = true
   security_group_name = "${local.name}-sg"
   security_group_description = "Security group for ${local.name} cluster"
-  security_group_tags = "${local.tags}-sg"
+  security_group_tags = "${local.name}-sg"
 
   # Enable/disable deletion protection for the cluster
   # deletion_protection = true
@@ -113,10 +104,7 @@ module "eks_demo" {
   node_iam_role_use_name_prefix = true
   node_iam_role_additional_policies = [
     "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
-    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
-    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
-    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  ]
+   ]
 
   # EKS managed node group
   eks_managed_node_groups = {
@@ -199,101 +187,101 @@ module "eks_demo" {
 
 
 
-    complete = {
-      name            = "complete-eks-mng"
-      use_name_prefix = true
+    # complete = {
+    #   name            = "complete-eks-mng"
+    #   use_name_prefix = true
 
-      subnet_ids = module.vpc.private_subnets
+    #   subnet_ids = module.vpc.private_subnets
 
-      min_size     = 1
-      max_size     = 3
-      desired_size = 1
+    #   min_size     = 1
+    #   max_size     = 3
+    #   desired_size = 1
 
-      ami_id                     = data.aws_ami.eks_default.image_id
-      enable_bootstrap_user_data = true
+    #   ami_id                     = data.aws_ami.eks_default.image_id
+    #   enable_bootstrap_user_data = true
 
-      pre_bootstrap_user_data = <<-EOT
-        export FOO=bar
-      EOT
+    #   pre_bootstrap_user_data = <<-EOT
+    #     export FOO=bar
+    #   EOT
 
-      post_bootstrap_user_data = <<-EOT
-        echo "you are free little kubelet!"
-      EOT
+    #   post_bootstrap_user_data = <<-EOT
+    #     echo "you are free little kubelet!"
+    #   EOT
 
-      capacity_type        = "SPOT"
-      force_update_version = true
-      instance_types       = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-      labels = {
-        GithubRepo = "terraform-aws-eks"
-        GithubOrg  = "terraform-aws-modules"
-      }
+    #   capacity_type        = "SPOT"
+    #   force_update_version = true
+    #   instance_types       = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
+    #   labels = {
+    #     GithubRepo = "terraform-aws-eks"
+    #     GithubOrg  = "terraform-aws-modules"
+    #   }
 
-      taints = [
-        {
-          key    = "dedicated"
-          value  = "gpuGroup"
-          effect = "NO_SCHEDULE"
-        }
-      ]
+    #   taints = [
+    #     {
+    #       key    = "dedicated"
+    #       value  = "gpuGroup"
+    #       effect = "NO_SCHEDULE"
+    #     }
+    #   ]
 
-      update_config = {
-        max_unavailable_percentage = 33 # or set `max_unavailable`
-      }
+    #   update_config = {
+    #     max_unavailable_percentage = 33 # or set `max_unavailable`
+    #   }
 
   
 
-      ebs_optimized           = true
-      disable_api_termination = false
-      enable_monitoring       = true
+    #   ebs_optimized           = true
+    #   disable_api_termination = false
+    #   enable_monitoring       = true
 
-      block_device_mappings = {
-        xvda = {
-          device_name = "/dev/xvda"
-          ebs = {
-            volume_size           = 75
-            volume_type           = "gp3"
-            iops                  = 3000
-            throughput            = 150
-            encrypted             = true
-            kms_key_id            = module.ebs_kms_key.key_arn
-            delete_on_termination = true
-          }
-        }
-      }
+    #   block_device_mappings = {
+    #     xvda = {
+    #       device_name = "/dev/xvda"
+    #       ebs = {
+    #         volume_size           = 75
+    #         volume_type           = "gp3"
+    #         iops                  = 3000
+    #         throughput            = 150
+    #         encrypted             = true
+    #         kms_key_id            = module.ebs_kms_key.key_arn
+    #         delete_on_termination = true
+    #       }
+    #     }
+    #   }
 
-      metadata_options = {
-        http_endpoint               = "enabled"
-        http_tokens                 = "required"
-        http_put_response_hop_limit = 2
-        instance_metadata_tags      = "disabled"
-      }
+    #   metadata_options = {
+    #     http_endpoint               = "enabled"
+    #     http_tokens                 = "required"
+    #     http_put_response_hop_limit = 2
+    #     instance_metadata_tags      = "disabled"
+    #   }
 
       
-    schedules = {
-    scale-up = {
-        min_size     = 2
-        max_size     = "-1" # Retains current max size
-        desired_size = 2
-        start_time   = "2023-05-10T00:00:00Z" # Updated start time to May 10, 2023. Ensure to adjust to a time in the future
-        end_time     = "2024-03-05T00:00:00Z"
-        timezone     = "Etc/GMT+0"
-        recurrence   = "0 0 * * *"
-    },
-    scale-down = {
-        min_size     = 0
-        max_size     = "-1" # Retains current max size
-        desired_size = 0
-        start_time   = "2023-05-11T12:00:00Z" # Updated start time to May 11, 2023. Ensure to adjust to a time in the future
-        end_time     = "2024-03-05T12:00:00Z"
-        timezone     = "Etc/GMT+0"
-        recurrence   = "0 12 * * *"
-    }
-    }
+    # schedules = {
+    # scale-up = {
+    #     min_size     = 2
+    #     max_size     = "-1" # Retains current max size
+    #     desired_size = 2
+    #     start_time   = "2023-05-10T00:00:00Z" # Updated start time to May 10, 2023. Ensure to adjust to a time in the future
+    #     end_time     = "2024-03-05T00:00:00Z"
+    #     timezone     = "Etc/GMT+0"
+    #     recurrence   = "0 0 * * *"
+    # },
+    # scale-down = {
+    #     min_size     = 0
+    #     max_size     = "-1" # Retains current max size
+    #     desired_size = 0
+    #     start_time   = "2023-05-11T12:00:00Z" # Updated start time to May 11, 2023. Ensure to adjust to a time in the future
+    #     end_time     = "2024-03-05T12:00:00Z"
+    #     timezone     = "Etc/GMT+0"
+    #     recurrence   = "0 12 * * *"
+    # }
+    # }
 
-      tags = {
-        ExtraTag = "EKS managed node group complete example"
-      }
-    }
+    #   tags = {
+    #     ExtraTag = "EKS managed node group complete example"
+    #   }
+    # }
   }
   
 
