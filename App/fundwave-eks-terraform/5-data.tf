@@ -19,3 +19,7 @@ output "account_id" {
 output "caller_arn" {
   value = data.aws_caller_identity.current.arn
 }
+
+output "iam_role_arn" {
+  value = module.eks_demo.iam_role_arn
+}
