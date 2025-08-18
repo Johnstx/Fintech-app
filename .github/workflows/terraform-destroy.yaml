@@ -22,7 +22,12 @@ jobs:
           terraform_version: 1.6.6
 
       - name: Terraform Init
-        run: terraform init
+        run: |
+          terraform init \
+            -backend-config="bucket=inyiri-eks-bucket" \
+            -backend-config="key=eks/fundwave.tfstate" \
+            -backend-config="region=us-west-1" \
+            -backend-config="dynamodb_table=terraform-locks"
         working-directory: ./App/fundwave-eks-terraform
 
       - name: Terraform Validate
