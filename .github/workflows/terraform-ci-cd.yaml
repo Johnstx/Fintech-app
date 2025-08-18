@@ -31,11 +31,14 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
-        run: terraform init -backend-config="bucket=inyiri-eks-bucket" \
-                            -backend-config="key=eks/fundwave.tfstate" \
-                            -backend-config="region=us-west-1" \
-                            -backend-config="dynamodb_table=terraform-locks"
         working-directory: ./App/fundwave-eks-terraform
+        run: |
+          terraform init \
+                 -backend-config="bucket=inyiri-eks-bucket" \
+                 -backend-config="key=eks/fundwave.tfstate" \
+                 -backend-config="region=us-west-1" \
+                 -backend-config="dynamodb_table=terraform-locks"
+      
 
       - name: Terraform Validate
         run: terraform validate
