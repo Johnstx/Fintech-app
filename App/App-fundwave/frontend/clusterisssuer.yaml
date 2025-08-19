@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuerIssuer
+metadata:
+  name: Letsencrypt-fundwave
+spec:
+  acme:
+    email: inyiri.io@gmail.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: Letsencrypt-fundwave-account-key
+    solvers:
+    - dns01:
+        route53:
+          hostedZoneID:
+        region: us-west-1
+      selector:
+        dnsZones:
+        

@@ -1,10 +1,10 @@
-- name: Deploy ArgoCD
+    name: Deploy ArgoCD
     # You may pin to the exact commit or the version.
     # uses: cloudposse/github-action-deploy-argocd@7356b85794090fe604f3c757dbb999d762377ea4
     uses: cloudposse/github-action-deploy-argocd@0.8.1
     with:
       # Cluster name
-      cluster: 
+      cluster: ${local.name}-demo
       # AWS region
       aws-region: # optional, default is us-east-1
       # The path where lives the helmfile or helm chart.

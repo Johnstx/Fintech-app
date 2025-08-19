@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  project: default
+  sources:
+  - repoURL: 'https://prometheus-community.github.io/helm-charts'
+    chart: kube-prometheus-stack
+    targetRevision: 76.4.0
+    helm:
+      valueFiles:
+      - $values/App/App-HELM-fundwave/values/values-kube-prometheus-stack.yaml
+      #  - $values/Argocd/Helm/Values/values-kube-prometheus-stack.yaml
+  - repoURL: 'git@github.com:Johnstx/Fintech-app.git'
+    targetRevision: main
+    ref: values
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - Validate=true
+      - ServerSideApply=true
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: monitoring
