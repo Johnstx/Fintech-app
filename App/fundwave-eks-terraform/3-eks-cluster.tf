@@ -48,7 +48,7 @@ module "eks_demo" {
   #  IAM role
   # Option A: Let the module create IAM role
   create_iam_role = true
-  iam_role_name = "${local.name}-eks-role"
+  iam_role_name = "${local.name}-role"
   iam_role_description = "IAM role for ${local.name} EKS cluster"
   # iam_role_arn = module.eks_demo.iam_role_arn
   iam_role_arn = module.eks_demo.cluster_iam_role_arn
