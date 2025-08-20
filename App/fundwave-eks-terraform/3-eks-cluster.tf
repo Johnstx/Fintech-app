@@ -79,38 +79,37 @@ module "eks_demo" {
 
 
 
-#  # Creating access entries for a new user, besides the cluster creator
-#   access_entries = {
-#   rocket = {
-#     principal_arn = module.eks_demo.cluster_iam_role_arn
-
-#     policy_associations = {
-#       example = {
-#         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-#         access_scope = {
-#           namespaces = ["default"]
-#           type       = "namespace"
-#         }
-#       }
-#     }
-#   }
-# }
-
-
+ # Creating access entries for a new user, besides the cluster creator
   access_entries = {
-   inyiri = {
-    principal_arn = "arn:aws:iam::673572871288:user/Inyiri"
+  rocket = {
+    principal_arn = module.eks_demo.cluster_iam_role_arn
 
     policy_associations = {
-      admin = {
+      example = {
         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
         access_scope = {
-           type = "cluster"
+            type       = "cluster"
         }
       }
     }
   }
 }
+
+
+#   access_entries = {
+#    inyiri = {
+#     principal_arn = "arn:aws:iam::673572871288:user/Inyiri"
+
+#     policy_associations = {
+#       admin = {
+#         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+#         access_scope = {
+#            type = "cluster"
+#         }
+#       }
+#     }
+#   }
+# }
 
   
   # IAM role for service accounts
