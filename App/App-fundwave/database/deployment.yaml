@@ -1,0 +1,31 @@
+johnstx/db-fw:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-fundwave
+  labels:
+    app: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+        - name: database
+          image: johnstx/backend-fw:1.1.0  # <-- Replace with your actual image + git hash
+          ports:
+            - containerPort: 27017
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
