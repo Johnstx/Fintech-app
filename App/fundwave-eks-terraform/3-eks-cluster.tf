@@ -102,8 +102,8 @@ module "eks_demo" {
 
 
   access_entries = {
-   inyiri = {
-    principal_arn = "arn:aws:iam::673572871288:user/Inyiri"
+   rocket = {
+    principal_arn = "arn:aws:iam::673572871288:user/staxx"
 
     policy_associations = {
       admin = {
