@@ -52,7 +52,9 @@ module "eks_demo" {
   iam_role_description = "IAM role for ${local.name} EKS cluster"
   # iam_role_arn = module.eks_demo.iam_role_arn
   iam_role_arn = module.eks_demo.cluster_iam_role_arn
-
+  iam_role_additional_policies = {
+    ssm = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  }
 
   # Option B: Use existing role (Especially useful for cross-account clusters, where roles are managed by a different account)
   # create_iam_role = false
@@ -96,11 +98,11 @@ module "eks_demo" {
 
 
   access_entries = {
-  rocket = {
+   inyiri = {
     principal_arn = "arn:aws:iam::673572871288:user/Inyiri"
 
     policy_associations = {
-      example = {
+      admin = {
         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
         access_scope = {
            type = "cluster"
