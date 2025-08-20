@@ -10,7 +10,7 @@ module "eks_demo" {
 
   name               = "${local.name}-demo"
   kubernetes_version = "1.33"
-  authentication_mode = "API"
+  authentication_mode = "API_AND_CONFIG_MAP"
   ip_family = "ipv4"
   create_cni_ipv6_iam_policy = true
   
