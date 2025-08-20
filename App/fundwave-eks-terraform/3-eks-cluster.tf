@@ -52,9 +52,14 @@ module "eks_demo" {
   iam_role_description = "IAM role for ${local.name} EKS cluster"
   # iam_role_arn = module.eks_demo.iam_role_arn
   iam_role_arn = module.eks_demo.cluster_iam_role_arn
+  # iam_role_additional_policies = {
+  #   ssm = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  # }
   iam_role_additional_policies = {
-    ssm = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  EKSClusterPolicy = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  EKSServicePolicy = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
   }
+
 
   # Option B: Use existing role (Especially useful for cross-account clusters, where roles are managed by a different account)
   # create_iam_role = false
@@ -80,36 +85,36 @@ module "eks_demo" {
 
 
  # Creating access entries for a new user, besides the cluster creator
-  access_entries = {
-  rocket = {
-    principal_arn = module.eks_demo.cluster_iam_role_arn
-
-    policy_associations = {
-      example = {
-        policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-        access_scope = {
-            type       = "cluster"
-        }
-      }
-    }
-  }
-}
-
-
 #   access_entries = {
-#    inyiri = {
-#     principal_arn = "arn:aws:iam::673572871288:user/Inyiri"
+#   rocket = {
+#     principal_arn = module.eks_demo.cluster_iam_role_arn
 
 #     policy_associations = {
-#       admin = {
+#       example = {
 #         policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
 #         access_scope = {
-#            type = "cluster"
+#             type       = "cluster"
 #         }
 #       }
 #     }
 #   }
 # }
+
+
+  access_entries = {
+   inyiri = {
+    principal_arn = "arn:aws:iam::673572871288:user/Inyiri"
+
+    policy_associations = {
+      admin = {
+        policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+        access_scope = {
+           type = "cluster"
+        }
+      }
+    }
+  }
+}
 
   
   # IAM role for service accounts
